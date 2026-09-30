@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Harbor — B2B Lead Research + Outreach Agent</title>
+  <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *{font-family:Inter,system-ui,sans-serif}
+    .mono{font-family:JetBrains Mono,monospace}
+    ::-webkit-scrollbar{width:6px;height:6px}
+    ::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:999px}
+    .card{border:1px solid #e2e8f0;background:#fff;border-radius:12px}
+    .badge{font-size:11px;letter-spacing:.02em;text-transform:uppercase;font-weight:600;padding:3px 8px;border-radius:999px}
+  </style>
+</head>
+<body class="bg-[#f8fafc] text-slate-800 flex min-h-screen">
+  <!-- Sidebar -->
+  <aside class="w-[240px] shrink-0 bg-[#0f172a] text-slate-200 flex flex-col sticky top-0 h-screen overflow-y-auto">
+    <div class="p-5 border-b border-white/10 flex items-center gap-3">
+      <div class="w-9 h-9 rounded-xl bg-[#0ea5e9] grid place-items-center font-bold text-white">H</div>
+      <div>
+        <div class="font-semibold text-white leading-none">Harbor</div>
+        <div class="text-[11px] tracking-widest uppercase opacity-60">B2B Agent</div>
+      </div>
+    </div>
+    <nav class="p-3 space-y-1 text-[13px]" id="nav">
+      <button data-view="dashboard" class="nav-btn w-full text-left px-3 py-2 rounded-lg bg-white/10 text-white">Dashboard</button>
+      <button data-view="campaigns" class="nav-btn w-full text-left px-3 py-2 rounded-lg hover:bg-white/10">Campaigns</button>
+      <button data-view="leads" class="nav-btn w-full text-left px-3 py-2 rounded-lg hover:bg-white/10">Leads <span id="leads-count" class="float-right mono text-xs opacity-60"></span></button>
+      <button data-view="research" class="nav-btn w-full text-left px-3 py-2 rounded-lg hover:bg-white/10">Research Queue</button>
+      <button data-view="inbox" class="nav-btn w-full text-left px-3 py-2 rounded-lg hover:bg-white/10">Inbox <span id="inbox-badge" class="float-right hidden bg-[#f59e0b] text-white text-[11px] px-2 py-0.5 rounded-full"></span></button>
+      <button data-view="followups" class="nav-btn w-full text-left px-3 py-2 rounded-lg hover:bg-white/10">Follow-ups</button>
+      <button data-view="suppression" class="nav-btn w-full text-left px-3 py-2 rounded-lg hover:bg-white/10">Suppression</button>
+      <button data-view="accounts" class="nav-btn w-full text-left px-3 py-2 rounded-lg hover:bg-white/10">Email Accounts</button>
+      <button data-view="analytics" class="nav-btn w-full text-left px-3 py-2 rounded-lg hover:bg-white/10">Analytics</button>
+      <button data-view="desk" class="nav-btn w-full text-left px-3 py-2 rounded-lg hover:bg-white/10 text-amber-200">Desk (classic)</button>
+      <button data-view="settings" class="nav-btn w-full text-left px-3 py-2 rounded-lg hover:bg-white/10">Settings</button>
+    </nav>
+    <div class="mt-auto p-4 border-t border-white/10">
+      <div class="text-xs opacity-60">Africa/Lagos • Local SQLite • No tracking</div>
+      <div class="text-xs mono mt-1" id="clock">—</div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="flex-1 min-w-0">
+    <header class="sticky top-0 z-10 bg-white/80 backdrop-blur border-b border-slate-200 px-6 py-4 flex items-center gap-4">
+      <h1 id="view-title" class="text-[18px] font-semibold">Dashboard</h1>
+      <div class="ml-auto flex items-center gap-2">
+        <button id="btn-new-campaign" class="bg-[#0f172a] text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-black">New campaign</button>
+        <button id="btn-find5" class="bg-[#0ea5e9] text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-sky-600">Find 5 more</button>
+      </div>
+    </header>
+    <div class="p-6 space-y-6">
+      <!-- Dashboard -->
+      <section id="view-dashboard" class="space-y-6">
+        <div class="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-3" id="metrics-grid"></div>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div class="card p-4 lg:col-span-2">
+            <div class="flex items-center justify-between mb-3"><h3 class="font-semibold">Campaign performance</h3><span class="text-xs mono opacity-60" id="perf-range">Last 30 days</span></div>
+            <div id="campaign-chart" class="h-[180px] grid place-items-center text-sm text-slate-400">No campaigns yet</div>
+          </div>
+          <div class="card p-4">
+            <h3 class="font-semibold mb-3">Industry breakdown</h3><div id="industry-breakdown" class="space-y-2 text-sm"></div>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div class="card p-4">
+            <h3 class="font-semibold mb-2">Recent leads</h3><div id="recent-leads" class="space-y-2"></div>
+          </div>
+          <div class="card p-4">
+            <h3 class="font-semibold mb-2">Recent replies</h3><div id="recent-replies" class="text-sm"></div>
+          </div>
+          <div class="card p-4">
+            <h3 class="font-semibold mb-2">Upcoming follow-ups</h3><div id="upcoming-followups" class="text-sm"></div>
+          </div>
+        </div>
+        <div class="card p-4">
+          <h3 class="font-semibold mb-2">Agent activity (live)</h3>
+          <div id="agent-activity" class="mono text-xs leading-5 max-h-[220px] overflow-auto bg-[#0f172a] text-[#e2e8f0] p-3 rounded-lg"></div>
+        </div>
+      </section>
+
+      <!-- Campaigns -->
+      <section id="view-campaigns" class="hidden space-y-4">
+        <div class="card p-4">
+          <div class="flex items-center justify-between"><h3 class="font-semibold">Campaigns</h3><button id="btn-create-campaign" class="text-sm text-[#0ea5e9]">+ Create</button></div>
+          <div id="campaigns-list" class="mt-4 space-y-3"></div>
+        </div>
+        <div class="card p-4">
+          <h3 class="font-semibold">Create campaign</h3>
+          <p class="text-sm text-slate-500 mb-4">Define where and who to find. The agent will handle discovery → research → verify → deduplicate → qualify → opportunity → email → compliance.</p>
+          <form id="campaign-form" class="grid grid-cols-1 lg:grid-cols-2 gap-4 text-sm">
+            <label>Campaign name <input name="name" class="w-full border rounded-lg px-3 py-2 mt-1" placeholder="Texas Property Management — Bad Rating" required></label>
+            <label>Country <select name="country" id="campaign-country" class="w-full border rounded-lg px-3 py-2 mt-1"><option value="Nigeria">Nigeria</option></select></label>
+            <label>State/Region <select name="state" id="campaign-state" class="w-full border rounded-lg px-3 py-2 mt-1" disabled><option value="">Select a country first</option></select></label>
+            <label>City <select name="city" id="campaign-city" class="w-full border rounded-lg px-3 py-2 mt-1" disabled><option value="">Select a state/region first</option></select></label>
+            <label>Industries <span class="text-[11px] opacity-60 font-normal">(who to find — e.g., Property Management in Houston)</span>
+              <div class="relative mt-1" id="industries-wrap">
+                <button type="button" id="industries-toggle" class="w-full border rounded-lg px-3 py-2 text-left flex items-center justify-between bg-white">
+                  <span id="industries-display" class="text-sm text-slate-800">construction company</span>
+                  <span class="text-slate-400 text-xs">▾</span>
+                </button>
+                <div id="industries-dropdown" class="hidden absolute z-20 w-full bg-white border rounded-xl mt-2 p-3 shadow-xl max-h-[420px] overflow-auto">
+                  <div class="text-[11px] font-semibold tracking-widest uppercase opacity-60">Construction & Property — click to select</div>
+                  <div class="grid grid-cols-2 gap-1.5 mt-2 text-[13px]">
+                    <label class="flex items-center gap-2 hover:bg-slate-50 p-1 rounded cursor-pointer"><input type="checkbox" value="Property Management" class="ind-cb"> Property Management</label>
+                    <label class="flex items-center gap-2 hover:bg-slate-50 p-1 rounded cursor-pointer"><input type="checkbox" value="Construction" class="ind-cb"> Construction</label>
+                    <label class="flex items-center gap-2 hover:bg-slate-50 p-1 rounded cursor-pointer"><input type="checkbox" value="Cleaning" class="ind-cb"> Cleaning</label>
+                    <label class="flex items-center gap-2 hover:bg-slate-50 p-1 rounded cursor-pointer"><input type="checkbox" value="Facility Management" class="ind-cb"> Facility Management</label>
+                    <label class="flex items-center gap-2 hover:bg-slate-50 p-1 rounded cursor-pointer"><input type="checkbox" value="General Contracting" class="ind-cb"> General Contracting</label>
+                    <label class="flex items-center gap-2 hover:bg-slate-50 p-1 rounded cursor-pointer"><input type="checkbox" value="Civil Construction" class="ind-cb"> Civil Construction</label>
+                    <label class="flex items-center gap-2 hover:bg-slate-50 p-1 rounded cursor-pointer"><input type="checkbox" value="Engineering" class="ind-cb"> Engineering</label>
+                    <label class="flex items-center gap-2 hover:bg-slate-50 p-1 rounded cursor-pointer"><input type="checkbox" value="Real Estate" class="ind-cb"> Real Estate</label>
+                    <label class="flex items-center gap-2 hover:bg-slate-50 p-1 rounded cursor-pointer"><input type="checkbox" value="Maintenance" class="ind-cb"> Maintenance</label>
+                    <label class="flex items-center gap-2 hover:bg-slate-50 p-1 rounded cursor-pointer"><input type="checkbox" value="Renovation" class="ind-cb"> Renovation</label>
+                  </div>
+                  <div class="text-[11px] font-semibold tracking-widest uppercase opacity-60 mt-4">Healthcare</div>
+                  <div class="grid grid-cols-2 gap-1.5 mt-2 text-[13px]">
+                    <label class="flex items-center gap-2 hover:bg-slate-50 p-1 rounded cursor-pointer"><input type="checkbox" value="Healthcare" class="ind-cb"> Healthcare</label>
+                    <label class="flex items-center gap-2 hover:bg-slate-50 p-1 rounded cursor-pointer"><input type="checkbox" value="Dental Clinic" class="ind-cb"> Dental Clinic</label>
+                    <label class="flex items-center gap-2 hover:bg-slate-50 p-1 rounded cursor-pointer"><input type="checkbox" value="Medical Practice" class="ind-cb"> Medical Practice</label>
+                    <label class="flex items-center gap-2 hover:bg-slate-50 p-1 rounded cursor-pointer"><input type="checkbox" value="Hospital" class="ind-cb"> Hospital</label>
+                    <label class="flex items-center gap-2 hover:bg-slate-50 p-1 rounded cursor-pointer"><input type="checkbox" value="Pharmacy" class="ind-cb"> Pharmacy</label>
+                    <label class="flex items-center gap-2 hover:bg-slate-50 p-1 rounded cursor-pointer"><input type="checkbox" value="Physiotherapy" class="ind-cb"> Physiotherapy</label>
+                    <label class="flex items-center gap-2 hover:bg-slate-50 p-1 rounded cursor-pointer"><input type="checkbox" value="Fitness & Gym" class="ind-cb"> Fitness & Gym</label>
+                    <label class="flex items-center gap-2 hover:bg-slate-50 p-1 rounded cursor-pointer"><input type="checkbox" value="Beauty Salon" class="ind-cb"> Beauty Salon</label>
+                    <label class="flex items-center gap-2 hover:bg-slate-50 p-1 rounded cursor-pointer"><input type="checkbox" value="Spa" class="ind-cb"> Spa</label>
+                    <label class="flex items-center gap-2 hover:bg-slate-50 p-1 rounded cursor-pointer"><input type="checkbox" value="Wellness" class="ind-cb"> Wellness</label>
+                  </div>
+                  <div class="text-[11px] font-semibold tracking-widest uppercase opacity-60 mt-4">Retail & Stores</div>
+                  <div class="grid grid-cols-2 gap-1.5 mt-2 text-[13px]">
+                    <label class="flex items-center gap-2 hover:bg-slate-50 p-1 rounded cursor-pointer"><input type="checkbox" value="Retail" class="ind-cb"> Retail</label>
+                    <label class="flex items-center gap-2 hover:bg-slate-50 p-1 rounded cursor-pointer"><input type="checkbox" value="E-commerce Store" class="ind-cb"> E-commerce Store</label>
+                    <label class="flex items-center gap-2 hover:bg-slate-50 p-1 rounded cursor-pointer"><input type="checkbox" value="Supermarket" class="ind-cb"> Supermarket</label>
+                    <label class="flex items-center gap-2 hover:bg-slate-50 p-1 rounded cursor-pointer"><input type="checkbox" value="Fashion Store" class="ind-cb"> Fashion Store</label>
+                    <label class="flex items-center gap-2 hover:bg-slate-50 p-1 rounded cursor-pointer"><input type="checkbox" value="Electronics Store" class="ind-cb"> Electronics Store</label>
+                    <label class="flex items-center gap-2 hover:bg-slate-50 p-1 rounded cursor-pointer"><input type="checkbox" value="Furniture Store" class="ind-cb"> Furniture Store</label>
+                    <label class="flex items-center gap-2 hover:bg-slate-50 p-1 rounded cursor-pointer"><input type="checkbox" value="Auto Dealership" class="ind-cb"> Auto Dealership</label>
+                    <label class="flex items-center gap-2 hover:bg-slate-50 p-1 rounded cursor-pointer"><input type="checkbox" value="Restaurant" class="ind-cb"> Restaurant</label>
+                    <label class="flex items-center gap-2 hover:bg-slate-50 p-1 rounded cursor-pointer"><input type="checkbox" value="Cafe" class="ind-cb"> Cafe</label>
+                    <label class="flex items-center gap-2 hover:bg-slate-50 p-1 rounded cursor-pointer"><input type="checkbox" value="Hotel" class="ind-cb"> Hotel</label>
+                  </div>
+                  <div class="text-[11px] font-semibold tracking-widest uppercase opacity-60 mt-4">More Varieties</div>
+                  <div class="grid grid-cols-2 gap-1.5 mt-2 text-[13px]">
+                    <label class="flex items-center gap-2 hover:bg-slate-50 p-1 rounded cursor-pointer"><input type="checkbox" value="Education" class="ind-cb"> Education / School</label>
+                    <label class="flex items-center gap-2 hover:bg-slate-50 p-1 rounded cursor-pointer"><input type="checkbox" value="Technology" class="ind-cb"> Technology / IT</label>
+                    <label class="flex items-center gap-2 hover:bg-slate-50 p-1 rounded cursor-pointer"><input type="checkbox" value="Marketing Agency" class="ind-cb"> Marketing Agency</label>
+                    <label class="flex items-center gap-2 hover:bg-slate-50 p-1 rounded cursor-pointer"><input type="checkbox" value="Legal" class="ind-cb"> Legal</label>
+                    <label class="flex items-center gap-2 hover:bg-slate-50 p-1 rounded cursor-pointer"><input type="checkbox" value="Accounting" class="ind-cb"> Accounting</label>
+                    <label class="flex items-center gap-2 hover:bg-slate-50 p-1 rounded cursor-pointer"><input type="checkbox" value="Finance" class="ind-cb"> Finance</label>
+                    <label class="flex items-center gap-2 hover:bg-slate-50 p-1 rounded cursor-pointer"><input type="checkbox" value="Logistics" class="ind-cb"> Logistics</label>
+                    <label class="flex items-center gap-2 hover:bg-slate-50 p-1 rounded cursor-pointer"><input type="checkbox" value="Manufacturing" class="ind-cb"> Manufacturing</label>
+                    <label class="flex items-center gap-2 hover:bg-slate-50 p-1 rounded cursor-pointer"><input type="checkbox" value="Automotive" class="ind-cb"> Automotive</label>
+                    <label class="flex items-center gap-2 hover:bg-slate-50 p-1 rounded cursor-pointer"><input type="checkbox" value="Security Services" class="ind-cb"> Security Services</label>
+                  </div>
+                  <div class="mt-4 pt-3 border-t flex gap-2">
+                    <input id="industries-custom" placeholder="Add custom industry" class="flex-1 border rounded-lg px-3 py-2 text-sm">
+                    <button type="button" id="industries-add-custom" class="bg-[#0f172a] text-white px-3 py-2 rounded-lg text-sm">Add</button>
+                  </div>
+                  <div class="mt-3 flex items-center justify-between">
+                    <span class="text-xs opacity-60">Selected: <span id="industries-selected" class="mono text-xs"></span></span>
+                    <button type="button" id="industries-clear" class="text-xs text-[#0ea5e9]">Clear</button>
+                  </div>
+                </div>
+                <input type="hidden" name="industries" id="industries-hidden" value="construction company">
+              </div>
+              <div id="industries-pills" class="flex flex-wrap gap-1.5 mt-2"></div>
+            </label>
+            <label>Lead type <select name="lead_type" class="w-full border rounded-lg px-3 py-2 mt-1"><option value="both">Both (bad + good growth)</option><option value="bad">Bad reviews only</option><option value="good">Good growth only</option></select></label>
+            <label>Rating min <input name="rating_min" type="number" step="0.1" class="w-full border rounded-lg px-3 py-2 mt-1" value="2.0"></label>
+            <label>Rating max <input name="rating_max" type="number" step="0.1" class="w-full border rounded-lg px-3 py-2 mt-1" value="3.9"></label>
+            <label>Min reviews <input name="review_min" type="number" class="w-full border rounded-lg px-3 py-2 mt-1" value="50"></label>
+            <label>Keywords <span class="text-[11px] opacity-60 font-normal">(optional — helps the agent prioritize leads whose site/reviews mention these operational themes)</span>
+              <div class="relative mt-1" id="keywords-wrap">
+                <button type="button" id="keywords-toggle" class="w-full border rounded-lg px-3 py-2 text-left flex items-center justify-between bg-white">
+                  <span id="keywords-display" class="text-sm text-slate-400">Select keywords…</span>
+                  <span class="text-slate-400 text-xs">▾</span>
+                </button>
+                <div id="keywords-dropdown" class="hidden absolute z-20 w-full bg-white border rounded-xl mt-2 p-3 shadow-xl max-h-[320px] overflow-auto">
+                  <div class="text-[11px] font-semibold tracking-widest uppercase opacity-60">Property Management</div>
+                  <div class="grid grid-cols-2 gap-1.5 mt-2 text-[13px]">
+                    <label class="flex items-center gap-2 hover:bg-slate-50 p-1 rounded cursor-pointer"><input type="checkbox" value="maintenance" class="kw-cb"> maintenance</label>
+                    <label class="flex items-center gap-2 hover:bg-slate-50 p-1 rounded cursor-pointer"><input type="checkbox" value="tenant screening" class="kw-cb"> tenant screening</label>
+                    <label class="flex items-center gap-2 hover:bg-slate-50 p-1 rounded cursor-pointer"><input type="checkbox" value="vendor" class="kw-cb"> vendor</label>
+                    <label class="flex items-center gap-2 hover:bg-slate-50 p-1 rounded cursor-pointer"><input type="checkbox" value="lease" class="kw-cb"> lease</label>
+                    <label class="flex items-center gap-2 hover:bg-slate-50 p-1 rounded cursor-pointer"><input type="checkbox" value="vacancy" class="kw-cb"> vacancy</label>
+                    <label class="flex items-center gap-2 hover:bg-slate-50 p-1 rounded cursor-pointer"><input type="checkbox" value="inspection" class="kw-cb"> inspection</label>
+                    <label class="flex items-center gap-2 hover:bg-slate-50 p-1 rounded cursor-pointer"><input type="checkbox" value="repair" class="kw-cb"> repair</label>
+                    <label class="flex items-center gap-2 hover:bg-slate-50 p-1 rounded cursor-pointer"><input type="checkbox" value="rent collection" class="kw-cb"> rent collection</label>
+                  </div>
+                  <div class="text-[11px] font-semibold tracking-widest uppercase opacity-60 mt-4">Construction</div>
+                  <div class="grid grid-cols-2 gap-1.5 mt-2 text-[13px]">
+                    <label class="flex items-center gap-2 hover:bg-slate-50 p-1 rounded cursor-pointer"><input type="checkbox" value="project management" class="kw-cb"> project management</label>
+                    <label class="flex items-center gap-2 hover:bg-slate-50 p-1 rounded cursor-pointer"><input type="checkbox" value="general contracting" class="kw-cb"> general contracting</label>
+                    <label class="flex items-center gap-2 hover:bg-slate-50 p-1 rounded cursor-pointer"><input type="checkbox" value="civil construction" class="kw-cb"> civil construction</label>
+                    <label class="flex items-center gap-2 hover:bg-slate-50 p-1 rounded cursor-pointer"><input type="checkbox" value="residential" class="kw-cb"> residential</label>
+                    <label class="flex items-center gap-2 hover:bg-slate-50 p-1 rounded cursor-pointer"><input type="checkbox" value="commercial" class="kw-cb"> commercial</label>
+                    <label class="flex items-center gap-2 hover:bg-slate-50 p-1 rounded cursor-pointer"><input type="checkbox" value="industrial" class="kw-cb"> industrial</label>
+                  </div>
+                  <div class="text-[11px] font-semibold tracking-widest uppercase opacity-60 mt-4">Cleaning / Operations</div>
+                  <div class="grid grid-cols-2 gap-1.5 mt-2 text-[13px]">
+                    <label class="flex items-center gap-2 hover:bg-slate-50 p-1 rounded cursor-pointer"><input type="checkbox" value="booking" class="kw-cb"> booking</label>
+                    <label class="flex items-center gap-2 hover:bg-slate-50 p-1 rounded cursor-pointer"><input type="checkbox" value="scheduling" class="kw-cb"> scheduling</label>
+                    <label class="flex items-center gap-2 hover:bg-slate-50 p-1 rounded cursor-pointer"><input type="checkbox" value="dispatch" class="kw-cb"> dispatch</label>
+                    <label class="flex items-center gap-2 hover:bg-slate-50 p-1 rounded cursor-pointer"><input type="checkbox" value="cleaning" class="kw-cb"> cleaning</label>
+                  </div>
+                  <div class="mt-4 pt-3 border-t flex gap-2">
+                    <input id="keywords-custom" placeholder="Add custom keyword" class="flex-1 border rounded-lg px-3 py-2 text-sm">
+                    <button type="button" id="keywords-add-custom" class="bg-[#0f172a] text-white px-3 py-2 rounded-lg text-sm">Add</button>
+                  </div>
+                  <div class="mt-3 flex items-center justify-between">
+                    <span class="text-xs opacity-60">Selected: <span id="keywords-selected" class="mono text-xs"></span></span>
+                    <button type="button" id="keywords-clear" class="text-xs text-[#0ea5e9]">Clear</button>
+                  </div>
+                </div>
+                <input type="hidden" name="keywords" id="keywords-hidden">
+              </div>
+              <div id="keywords-pills" class="flex flex-wrap gap-1.5 mt-2"></div>
+            </label>
+            <label>Daily send limit <input name="daily_send_limit" type="number" class="w-full border rounded-lg px-3 py-2 mt-1" value="50"></label>
+            <label>Research depth <select name="research_depth" class="w-full border rounded-lg px-3 py-2 mt-1"><option>basic</option><option selected>standard</option><option>deep</option></select></label>
+            <label class="flex items-center gap-2 mt-6"><input type="checkbox" name="auto_send"> Auto-send (autopilot)</label>
+            <div class="lg:col-span-2 flex gap-2 justify-end"><button type="submit" class="bg-[#0f172a] text-white px-5 py-2 rounded-lg">Create campaign</button></div>
+          </form>
+        </div>
+      </section>
+
+      <!-- Leads -->
+      <section id="view-leads" class="hidden space-y-4">
+        <div class="card p-4">
+          <div class="flex flex-wrap items-center gap-2">
+            <input id="lead-search" placeholder="Search company, email, industry…" class="border rounded-lg px-3 py-2 text-sm w-[260px]">
+            <select id="lead-status-filter" class="border rounded-lg px-3 py-2 text-sm">
+              <option value="">All statuses</option>
+              <option>DISCOVERED</option><option>RESEARCHED</option><option>QUALIFIED</option><option>DRAFT_READY</option><option>NEEDS_REVIEW</option><option>SENT</option><option>REPLIED</option><option>BOUNCED</option><option>UNSUBSCRIBED</option>
+            </select>
+            <select id="lead-campaign-filter" class="border rounded-lg px-3 py-2 text-sm"><option value="">All campaigns</option></select>
+            <button id="btn-export" class="ml-auto text-sm border px-3 py-2 rounded-lg">Export CSV</button>
+          </div>
+          <div id="leads-table" class="mt-4 overflow-auto"></div>
+        </div>
+      </section>
+
+      <!-- Research Queue -->
+      <section id="view-research" class="hidden space-y-4">
+        <div class="card p-4">
+          <h3 class="font-semibold">Research queue & jobs</h3>
+          <div id="jobs-list" class="mt-3 space-y-2 mono text-xs"></div>
+        </div>
+        <div class="card p-4">
+          <h3 class="font-semibold">Agent runs (debug)</h3>
+          <div id="agent-runs" class="mt-3 space-y-2 mono text-xs max-h-[400px] overflow-auto"></div>
+        </div>
+      </section>
+
+      <!-- Inbox -->
+      <section id="view-inbox" class="hidden space-y-4">
+        <div class="card p-4">
+          <div class="flex items-center justify-between"><h3 class="font-semibold">Inbox — replies</h3><button id="btn-check-inbox" class="text-sm border px-3 py-1.5 rounded-lg">Check inbox</button></div>
+          <div id="inbox-list" class="mt-4 space-y-3"></div>
+        </div>
+      </section>
+
+      <!-- Follow-ups -->
+      <section id="view-followups" class="hidden">
+        <div class="card p-4"><h3 class="font-semibold">Follow-ups</h3><div id="followups-list" class="mt-3 text-sm"></div></div>
+      </section>
+
+      <!-- Suppression -->
+      <section id="view-suppression" class="hidden space-y-4">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div class="card p-4">
+            <h3 class="font-semibold">Suppression list (never send again)</h3>
+            <form id="suppression-form" class="flex gap-2 mt-3"><input name="email" placeholder="email to suppress" class="border rounded-lg px-3 py-2 flex-1 text-sm" required><button class="bg-[#0f172a] text-white px-4 py-2 rounded-lg text-sm">Add</button></form>
+            <div id="suppression-list" class="mt-4 space-y-1 text-sm max-h-[300px] overflow-auto"></div>
+          </div>
+          <div class="card p-4">
+            <h3 class="font-semibold">Blocked companies / domains</h3>
+            <form id="block-form" class="grid grid-cols-1 gap-2 mt-3 text-sm">
+              <input name="company_name" placeholder="Company name" class="border rounded-lg px-3 py-2">
+              <input name="domain" placeholder="domain.com" class="border rounded-lg px-3 py-2">
+              <input name="email" placeholder="email" class="border rounded-lg px-3 py-2">
+              <button class="bg-[#0f172a] text-white px-4 py-2 rounded-lg">Block</button>
+            </form>
+            <div id="blocked-list" class="mt-4 space-y-1 text-sm max-h-[300px] overflow-auto"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Email Accounts -->
+      <section id="view-accounts" class="hidden space-y-4">
+        <div class="card p-4">
+          <h3 class="font-semibold">Email accounts</h3>
+          <p class="text-sm text-slate-500">Connect Gmail via OAuth (or mock for demo). Multiple inboxes supported. Tokens are encrypted at rest in this SQLite demo.</p>
+          <div id="accounts-list" class="mt-4 space-y-2"></div>
+          <form id="account-form" class="grid grid-cols-1 lg:grid-cols-3 gap-3 mt-6 text-sm">
+            <input name="email" placeholder="you@gmail.com" class="border rounded-lg px-3 py-2" required>
+            <input name="display_name" placeholder="Display name" class="border rounded-lg px-3 py-2">
+            <input name="daily_limit" type="number" placeholder="Daily limit" value="50" class="border rounded-lg px-3 py-2">
+            <button class="bg-[#0ea5e9] text-white px-4 py-2 rounded-lg lg:col-span-3">Connect (mock OAuth)</button>
+          </form>
+          <div class="mt-4 flex gap-2">
+            <button id="btn-oauth-url" class="text-sm border px-3 py-2 rounded-lg">Get Google OAuth URL</button>
+            <input id="oauth-code" placeholder="Paste code from Google" class="border rounded-lg px-3 py-2 text-sm flex-1">
+            <button id="btn-oauth-exchange" class="text-sm bg-[#0f172a] text-white px-4 py-2 rounded-lg">Exchange</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Analytics -->
+      <section id="view-analytics" class="hidden space-y-4">
+        <div id="analytics-cards" class="grid grid-cols-2 lg:grid-cols-4 gap-3"></div>
+        <div class="card p-4">
+          <h3 class="font-semibold">Performance by industry & location</h3>
+          <div id="analytics-breakdown" class="mt-3 grid grid-cols-1 lg:grid-cols-2 gap-4 text-sm"></div>
+        </div>
+      </section>
+
+      <!-- Classic Desk -->
+      <section id="view-desk" class="hidden space-y-4">
+        <p class="text-sm text-slate-500">Classic Harbor desk (local SQLite, no login). Kept for compatibility.</p>
+        <div class="grid grid-cols-1 lg:grid-cols-[280px_1fr_300px] gap-4">
+          <aside class="card p-3">
+            <input id="filter" placeholder="Filter the desk" class="w-full border rounded-lg px-3 py-2 text-sm">
+            <div id="list" class="mt-3 space-y-1 max-h-[60vh] overflow-auto"></div>
+          </aside>
+          <section id="letter" class="card p-4 min-h-[400px]"></section>
+          <aside id="side" class="card p-4"></aside>
+        </div>
+      </section>
+
+      <!-- Settings -->
+      <section id="view-settings" class="hidden space-y-4">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div class="card p-4">
+            <h3 class="font-semibold">Your side of the letter</h3>
+            <form id="settings-form" class="space-y-3 mt-3 text-sm">
+              <label>Your name <input name="sender_name" class="w-full border rounded-lg px-3 py-2 mt-1"></label>
+              <label>Company <input name="sender_company" class="w-full border rounded-lg px-3 py-2 mt-1"></label>
+              <label>Role <input name="sender_role" class="w-full border rounded-lg px-3 py-2 mt-1"></label>
+              <label>From email <input name="from_email" type="email" class="w-full border rounded-lg px-3 py-2 mt-1"></label>
+              <label>Postal address <textarea name="postal_address" rows="2" class="w-full border rounded-lg px-3 py-2 mt-1"></textarea></label>
+              <label>What you do (offer) <textarea name="offer" rows="3" class="w-full border rounded-lg px-3 py-2 mt-1"></textarea></label>
+              <label>Daily cap <input name="daily_cap" type="number" min="1" max="40" class="w-full border rounded-lg px-3 py-2 mt-1"></label>
+              <button class="bg-[#0f172a] text-white px-4 py-2 rounded-lg">Save settings</button>
+            </form>
+          </div>
+          <div class="card p-4">
+            <h3 class="font-semibold">Mailbox (SMTP fallback)</h3>
+            <p class="text-xs text-slate-500">Gmail: smtp.gmail.com:587 STARTTLS + app password. For OAuth, use Email Accounts → Connect.</p>
+            <form id="smtp-form" class="space-y-3 mt-3 text-sm">
+              <input name="host" placeholder="smtp.gmail.com" class="w-full border rounded-lg px-3 py-2">
+              <div class="grid grid-cols-2 gap-3"><input name="port" type="number" placeholder="587" class="border rounded-lg px-3 py-2"><select name="security" class="border rounded-lg px-3 py-2"><option value="starttls">STARTTLS</option><option value="ssl">SSL</option></select></div>
+              <input name="user" placeholder="Username" class="w-full border rounded-lg px-3 py-2">
+              <input name="password" type="password" placeholder="Leave blank to keep" class="w-full border rounded-lg px-3 py-2">
+              <div class="flex gap-2"><button type="button" id="check-smtp" class="border px-4 py-2 rounded-lg">Check login</button><button class="bg-[#0f172a] text-white px-4 py-2 rounded-lg">Save mailbox</button></div>
+            </form>
+            <div class="mt-6">
+              <h4 class="font-semibold text-sm">Prompts (versioned)</h4>
+              <div class="grid gap-3 mt-2 text-sm">
+                <label>Cold email framework <textarea id="prompt-email" rows="4" class="w-full border rounded-lg px-3 py-2 mono text-xs"></textarea></label>
+                <label>Lead research instructions <textarea id="prompt-research" rows="3" class="w-full border rounded-lg px-3 py-2 mono text-xs"></textarea></label>
+                <button id="btn-save-prompts" class="bg-[#0ea5e9] text-white px-4 py-2 rounded-lg">Save prompts</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card p-4">
+          <h3 class="font-semibold">Audit log</h3>
+          <div id="audit-log" class="mt-3 mono text-xs max-h-[300px] overflow-auto"></div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- Lead detail drawer -->
+  <dialog id="lead-drawer" class="p-0 w-[720px] max-w-[95vw] rounded-xl border-0 shadow-2xl">
+    <div id="lead-detail" class="p-6 max-h-[90vh] overflow-auto"></div>
+  </dialog>
+
+  <div id="toast" class="fixed bottom-4 right-4 hidden bg-[#0f172a] text-white px-4 py-3 rounded-lg shadow-lg text-sm max-w-[380px]"></div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
